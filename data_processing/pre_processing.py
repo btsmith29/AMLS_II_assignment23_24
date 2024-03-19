@@ -18,6 +18,13 @@ IMAGE_SIZE = 255
 BATCH_SIZE = 196
 
 
+def download_data(path: Path) -> None:
+    url = "https://drive.google.com/uc?id=1TJBf1HZxAMpowZ92BcgS5N_NPHE7LPOT"
+    output = path / "data.zip"
+    gdown.download(url, str(output), quiet=False)
+    return output
+    
+
 def data_preprocessing(path: Path):
     file = download_data(path) # pass data_path
     
@@ -48,11 +55,7 @@ def data_preprocessing(path: Path):
     return ds_train, ds_valid, ds_test
 
 
-def download_data(path: Path) -> None:
-    url = "https://drive.google.com/uc?id=1TJBf1HZxAMpowZ92BcgS5N_NPHE7LPOT"
-    output = path / "data.zip"
-    gdown.download(url, str(output), quiet=False)
-    return output
+
 
 
 def create_ds_tree(x, y, path, name):
