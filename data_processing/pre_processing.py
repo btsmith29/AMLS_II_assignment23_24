@@ -19,9 +19,9 @@ BATCH_SIZE = 196
 
 
 def data_preprocessing(path: Path):
-    file = download_data() # pass data_path
+    file = download_data(path) # pass data_path
     
-    data_path = Path(path) / "data"
+    data_path = path / "data"
     data_path.mkdir(parents=True, exist_ok=True)
     
     with zipfile.ZipFile(file, "r") as z:
