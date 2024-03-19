@@ -9,6 +9,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 
+IMAGE_SIZE = 255
+BATCH_SIZE = 196
+
+EPOCHS = 50
+ES = True
+ES_PATIENCE = 10
+
+
 def use_pre_trained_model_convnext_tiny() -> Model:
     
     base_model = tf.keras.applications.ConvNeXtTiny(weights='imagenet', include_top=False)
