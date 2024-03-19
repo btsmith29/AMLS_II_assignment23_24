@@ -14,11 +14,12 @@ import os
 from AMLS_II_assignment23_24.data_processing import pre_processing as data
 from AMLS_II_assignment23_24.model import util as model_util
 from docopt import docopt
+from pathlib import Path
 
 
 def main(download=False):
   cwd = os.getcwd()
-  ds_train, ds_valid, ds_test = data.data_preprocessing(cwd)
+  ds_train, ds_valid, ds_test = data.data_preprocessing(Path(cwd))
   
   df_results = pd.DataFrame
   ES = True
