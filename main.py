@@ -10,6 +10,7 @@ Options:
 """
 
 import os
+import pandas as pd
 
 from AMLS_II_assignment23_24.data_processing import pre_processing as data
 from AMLS_II_assignment23_24.model import util as model_util
