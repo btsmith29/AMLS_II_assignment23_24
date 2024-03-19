@@ -15,6 +15,7 @@ BATCH_SIZE = 196
 EPOCHS = 50
 ES = True
 ES_PATIENCE = 10
+LR = False
 
 
 def use_pre_trained_model_convnext_tiny() -> Model:
