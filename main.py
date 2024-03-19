@@ -11,9 +11,9 @@ Options:
 
 import os
 
-from data_processing import pre_processing as data
+from AMLS_II_assignment23_24.data_processing import pre_processing as data
+from AMLS_II_assignment23_24.model import util as model_util
 from docopt import docopt
-from model import util as model_util
 
 
 def main(download=False):
