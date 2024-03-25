@@ -32,11 +32,8 @@ def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset
         
     df_images = pd.read_csv((data_path / "train.csv"))
    
-    X_train, X_test, y_train, y_test
-        = train_test_split(df_images.image_id, df_images.label, test_size=0.2, random_state=12)
-    
-    X_train, X_valid, y_train, y_valid
-        = train_test_split(X_train, y_train, test_size=0.25, random_state=12)
+    X_train, X_test, y_train, y_test = train_test_split(df_images.image_id, df_images.label, test_size=0.2, random_state=12)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.25, random_state=12)
     
     train_path = create_ds_tree(X_train, y_train, data_path, "train")
     valid_path = create_ds_tree(X_valid, y_valid, data_path, "valid")
