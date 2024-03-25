@@ -28,7 +28,7 @@ def main(download=False):
 
   # Process Data
   cwd = os.getcwd()
-  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(Path(cwd), DEFAULT_PARAMS)
+  ds_train, ds_valid, ds_test, class_weights = data.data_preprocessing(Path(cwd), DEFAULT_PARAMS)
   print(f"Class Weights: {class_weights}")
   
   # df_results = pd.DataFrame
