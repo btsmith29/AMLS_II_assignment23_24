@@ -6,7 +6,7 @@ import tensorflow as tf
 import os
 import zipfile
 
-from AMLS_II_assignment23_24 import Params
+from AMLS_II_assignment23_24.main import Params
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from tensorflow.keras import layers, callbacks
