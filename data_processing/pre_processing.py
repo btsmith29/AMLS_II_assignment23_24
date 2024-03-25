@@ -15,8 +15,7 @@ from tensorflow.keras.preprocessing import image_dataset_from_directory
 from typing import Tuple
 
 
-def data_preprocessing(path: Path, params: Params, force=False)
-    -> Tuple[Dataset, Dataset, Dataset, dict]:
+def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset, Dataset, Dataset, dict]:
     """
     """
     file = download_data(path, force)
