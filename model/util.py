@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras import layers, callbacks
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image_dataset_from_directory
+from typing import NamedTuple
 
 
 IMAGE_SIZE = 255
@@ -16,6 +17,18 @@ EPOCHS = 50
 ES = True
 ES_PATIENCE = 10
 LR = False
+
+
+class Params(NamedTuple):
+    """
+    Job Parameters Struct
+    """
+    image_size: int
+    batch_size: int
+    epochs: int
+    early_stopping: bool
+    early_stopping_patience: int
+    adjust_learning_rate: bool
 
 
 def use_pre_trained_model_convnext_tiny() -> Model:
