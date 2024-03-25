@@ -27,6 +27,8 @@ def main(download=False):
   DEFAULT_PARAMS = model_util.Params(100, 196, 2, True, 5, False)
   print(DEFAULT_PARAMS)
 
+  ARTIFACTS_PATH = Path("artefacts").mkdir(parents=True, exist_ok=True)
+
   # Process Data
   cwd = os.getcwd()
   ds_train, ds_valid, ds_test, class_weights = data.data_preprocessing(Path(cwd), DEFAULT_PARAMS)
