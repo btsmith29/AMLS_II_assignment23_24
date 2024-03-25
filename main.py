@@ -23,13 +23,20 @@ def main(download=False):
 
   tf.random.set_seed(67890)
 
-  DEFAULT_PARAMS = model_util.Params(255, 196, 50, True, 5, False)
+  #DEFAULT_PARAMS = model_util.Params(255, 196, 50, True, 5, False)
+  DEFAULT_PARAMS = model_util.Params(100, 196, 2, True, 5, False)
   print(DEFAULT_PARAMS)
 
   # Process Data
   cwd = os.getcwd()
   ds_train, ds_valid, ds_test, class_weights = data.data_preprocessing(Path(cwd), DEFAULT_PARAMS)
   print(f"Class Weights: {class_weights}")
+
+  baseline_model = model_util.create_model(tf.keras.applications.ConvNeXtBase, "baseline_model", DEFAULT_PARAMS)
+  df_train, df_test = model_util.run_task("convnextbase", baseline_model, ds_train, ds_valid, ds_test, DEFAULT_PARAMS)
+
+  print(df_train)
+  print(ds_test)
   
   # df_results = pd.DataFrame
   # ES = True
