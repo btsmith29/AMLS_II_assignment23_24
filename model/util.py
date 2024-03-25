@@ -9,7 +9,7 @@ from tensorflow.data import Dataset
 from tensorflow.keras import layers, callbacks
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Dropout, Flatten, GlobalAveragePooling2D
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 
 class Params(NamedTuple):
