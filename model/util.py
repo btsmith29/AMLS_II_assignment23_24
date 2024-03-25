@@ -65,7 +65,7 @@ def create_model(base_model_fn: str, name: str, params: Params) -> ModelWrapper:
 
 
 def run_task(task_id: str, model_wrapper: ModelWrapper,
-             ds_train_: Dataset, ds_valid_: Dataset, ds_test_: Dataset,
+             ds_train: Dataset, ds_valid: Dataset, ds_test: Dataset,
              params: Params, weights = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
     
     model = model_wrapper.model
