@@ -70,7 +70,7 @@ def run_task(task_id: str, model_wrapper: ModelWrapper,
     
     model = model_wrapper.model
     # train
-    df_train = train(task_id, model, ds_train, ds_valid, DEFAULT_PARAMS)
+    df_train = train(task_id, model, ds_train, ds_valid, params)
     # test
     test_result = model.evaluate(ds_test)
     df_test = create_test_record(task_id, test_result)
