@@ -42,6 +42,11 @@ def main(download=False):
   print(df_test)
 
   print("==== Task B: Baseline + Data Augmentation ====")
+  ds_train_aug = data.augment_dataset(ds_train, 2)
+  baseline_model2 = model_util.create_model(tf.keras.applications.ConvNeXtBase, "baseline_model_aug", DEFAULT_PARAMS)
+  df_train, df_test = model_util.run_task("convnextbase", baseline_model2, ds_train_aug, ds_valid, ds_test, DEFAULT_PARAMS)
+  print(df_train)
+  print(df_test)
 
 
 if __name__ == "__main__":
