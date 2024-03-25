@@ -17,26 +17,13 @@ from AMLS_II_assignment23_24.data_processing import pre_processing as data
 from AMLS_II_assignment23_24.model import util as model_util
 from docopt import docopt
 from pathlib import Path
-from typing import Tuple
-
-
-class Params(NamedTuple):
-    """
-    Job Parameters Struct
-    """
-    image_size: int
-    batch_size: int
-    epochs: int
-    early_stopping: bool
-    early_stopping_patience: int
-    adjust_learning_rate: bool
 
 
 def main(download=False):
 
   tf.random.set_seed(67890)
 
-  DEFAULT_PARAMS = Params(255, 196, 50, True, 5, False)
+  DEFAULT_PARAMS = model_util.Params(255, 196, 50, True, 5, False)
   print(DEFAULT_PARAMS)
 
   # Process Data
