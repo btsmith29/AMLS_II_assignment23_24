@@ -11,6 +11,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from tensorflow.data import Dataset
+from tensorflow.data.experimental import AUTOTUNE
 from tensorflow.keras import layers, callbacks
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image_dataset_from_directory
@@ -111,7 +112,6 @@ def augment_dataset(ds: Dataset, num_repeats: int) -> Dataset:
         image = tf.image.random_brightness(image, 0.2, seed)
         return image, label
 
-    AUTOTUNE = tf.data.experimental.AUTOTUNE
     return (
         ds
         .repeat(num_repeats)
