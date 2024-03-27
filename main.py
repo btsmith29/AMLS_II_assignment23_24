@@ -15,7 +15,7 @@ import tensorflow as tf
 
 from AMLS_II_assignment23_24.data_processing import pre_processing as data
 from AMLS_II_assignment23_24.model import util as model_util
-from AMLS_II_assignment23_24.model.util imports Params, ResultCollector
+from AMLS_II_assignment23_24.model.util import Params, ResultCollector
 from docopt import docopt
 from pathlib import Path
 
