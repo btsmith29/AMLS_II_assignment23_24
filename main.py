@@ -28,7 +28,10 @@ def main(download=False):
   DEFAULT_PARAMS = Params(50, 196, 1, True, 5, False)
   print(DEFAULT_PARAMS)
 
-  ARTIFACTS_PATH = Path("artefacts").mkdir(parents=True, exist_ok=True)
+  ARTEFACTS_PATH = Path("artefacts")
+  ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
+
+  collector = ResultCollector(ARTEFACTS_PATH)
 
   # Process Data
   print("==== Loading Data ====")
