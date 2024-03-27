@@ -25,6 +25,47 @@ class Params(NamedTuple):
     adjust_learning_rate: bool
 
 
+class ResultCollector():
+    
+    def __init__(
+        self,
+        path: Path
+    ):
+        self.path = path
+        self.train_details = pd.DataFrame
+        self.test_scores = pd.DataFrame
+
+    def add_task_results(self, df_train, df_test) -> None:
+        self.add_train_details(df_train)
+        self.add_test_scores(df_test)
+        
+    def add_train_details(self, df: pd.DataFrame) -> None:
+        if self.train_details.empty:
+            self.train_details = df
+        else:
+            self.train_details = pd.concat([self.train_details, df])
+        
+        self._save(self.train_details, "train_details.csv")
+        
+
+    def get_train_details(self) -> pd.DataFrame:
+        return self.train_details
+    
+    def add_test_scores(self, df: pd.DataFrame) -> None:
+        if self.test_scores.empty:
+            self.test_scores = df
+        else:
+            self.test_scores = pd.concat([self.test_scores, df])
+            
+        self._save(self.test_scores, "test_scores.csv")
+            
+    def get_test_scores(self) -> pd.DataFrame:
+        return self.test_scores
+    
+    def _save(self, df: pd.DataFrame, name: str) -> None:
+        df.to_csv(self.path / name, index=False)
+
+
 @dataclass
 class ModelWrapper():
     """
