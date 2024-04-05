@@ -1,32 +1,44 @@
-# -*- coding: utf-8 -*-
+"""
+Functions for creating and training models, used across the various tasks.
+"""
+import dataclasses
 import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from tensorflow.data import Dataset
 from tensorflow.keras import layers, callbacks
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Dropout, Flatten, GlobalAveragePooling2D
+from tensorflow.keras.layers import BatchNormalization, Conv2D, Dense, Dropout, Flatten, GlobalAveragePooling2D, MaxPooling2D
 from typing import NamedTuple, Tuple
 
 
-class Params(NamedTuple):
+@dataclasses.dataclass
+class Params():
     """
     Job Parameters Struct
     """
     image_size: int
     batch_size: int
     epochs: int
+    epsilon: float
     early_stopping: bool
     early_stopping_patience: int
     adjust_learning_rate: bool
-
-
+    opt: type
+        
+        
 class ResultCollector():
+    """
+    Utility class to collect up and output results from tasks.
+    """
+    
+    TRAIN_DETAILS_FILE = "train_details.csv"
+    TEST_SCORES_FILE = "test_scores.csv"
     
     def __init__(
         self,
@@ -35,59 +47,71 @@ class ResultCollector():
         self.path = path
         self.train_details = pd.DataFrame
         self.test_scores = pd.DataFrame
+        
+    def get_path(self) -> Path:
+        """ Returns the path to which the collectors stores results """
+        return self.path
 
     def add_task_results(self, df_train, df_test) -> None:
-        self.add_train_details(df_train)
-        self.add_test_scores(df_test)
+        """ Add training details and test scores into the collector"""
+        self._add_train_details(df_train)
+        self._add_test_scores(df_test)
         
-    def add_train_details(self, df: pd.DataFrame) -> None:
+    def get_train_details(self) -> pd.DataFrame:
+        """ Returns the training details collected """
+        return self.train_details
+               
+    def get_test_scores(self) -> pd.DataFrame:
+        """ Returns the test scores collected """
+        return self.test_scores
+    
+    def restore_results(self, quietly = True) -> None:
+        """ Loads results from the location of get_path()"""
+        try:
+            self.train_details = pd.read_csv(self.path / self.TRAIN_DETAILS_FILE)
+            self.test_scores = pd.read_csv(self.path / self.TEST_SCORES_FILE)
+        except FileNotFoundError:
+            print("Unable to restore history - starting fresh")
+            if not quietly:
+                raise
+
+    def _add_train_details(self, df: pd.DataFrame) -> None:
         if self.train_details.empty:
             self.train_details = df
         else:
             self.train_details = pd.concat([self.train_details, df])
         
-        self._save(self.train_details, "train_details.csv")
+        self._save(self.train_details, self.TRAIN_DETAILS_FILE)
         
-
-    def get_train_details(self) -> pd.DataFrame:
-        return self.train_details
-    
-    def add_test_scores(self, df: pd.DataFrame) -> None:
+    def _add_test_scores(self, df: pd.DataFrame) -> None:
         if self.test_scores.empty:
             self.test_scores = df
         else:
             self.test_scores = pd.concat([self.test_scores, df])
             
-        self._save(self.test_scores, "test_scores.csv")
-            
-    def get_test_scores(self) -> pd.DataFrame:
-        return self.test_scores
-    
+        self._save(self.test_scores, self.TEST_SCORES_FILE)
+                
     def _save(self, df: pd.DataFrame, name: str) -> None:
         df.to_csv(self.path / name, index=False)
 
 
-@dataclass
+@dataclasses.dataclass
 class ModelWrapper():
     """
-    Util class to hold the "outer" model, and the inner base model
-    so that training can be fine-tuned.
-    """
-    
+    Utility class to hold the "outer" model, and the inner base model
+    so that training can be fine-tuned if required.
+    """    
     model: keras.Model
     base_model: keras.Model
-        
 
-def create_model(base_model_fn: str, name: str, params: Params) -> ModelWrapper:
+
+def create_model(base_model_fn: str, params: Params, fc_layers = 2, fc_neurons = 1024, batch_norm = False) -> ModelWrapper:
     """
     Create Keras application model, e.g.
         tf.keras.applications.EfficientNetV2B0
         tf.keras.applications.ConvNeXtBase
     with a custom top.
     """
-    # i = 0
-    # name=f"{name}-{(i:=i+1)}"
-    # name = [name+str(i) for i in range(17)]
     inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
     # Base
     base_model = base_model_fn(weights='imagenet', include_top=False)
@@ -96,11 +120,16 @@ def create_model(base_model_fn: str, name: str, params: Params) -> ModelWrapper:
     x = base_model(inputs, training=False)
     # Head
     x = GlobalAveragePooling2D()(x)
+    if batch_norm:
+        x = BatchNormalization()(x)
     x = Flatten()(x)
-    x = Dense(1024, activation="relu")(x)
-    x = Dropout(0.5)(x)
-    x = Dense(1024, activation="relu")(x)
-    x = Dropout(0.5)(x)
+    
+    l = 0
+    while (l < fc_layers):
+        x = Dense(fc_neurons, activation="relu")(x)
+        x = Dropout(0.5)(x)
+        l = l + 1
+    
     outputs = Dense(5, activation="softmax")(x)
     model = keras.Model(inputs, outputs)
 
@@ -109,25 +138,32 @@ def create_model(base_model_fn: str, name: str, params: Params) -> ModelWrapper:
 
 def run_task(task_id: str, model_wrapper: ModelWrapper,
              ds_train: Dataset, ds_valid: Dataset, ds_test: Dataset,
-             params: Params, weights = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    
+             params: Params, collector: ResultCollector, weights = None) -> None:
+    """
+    Main task running function.
+    """
+    print(f"Running Task: {task_id} with params {params}")
     model = model_wrapper.model
     # train
-    df_train = train(task_id, model, ds_train, ds_valid, params)
+    start = datetime.datetime.now()
+    df_train = _train(task_id, model, ds_train, ds_valid, params)
+    end = datetime.datetime.now()
     # test
     test_result = model.evaluate(ds_test)
-    df_test = create_test_record(task_id, test_result)
+    df_test = _create_test_record(task_id, test_result, (end-start))
     # save CM too
-    save_confusion_matrix(ds_test, model, task_id)
-    return df_train, df_test
+    _save_confusion_matrix(collector.get_path(), ds_test, model, task_id)
 
 
-def train(task_id: str, model: Model,
+def _train(task_id: str, model: Model,
              ds_train_: Dataset, ds_valid_: Dataset,
              params: Params, weights = None) -> pd.DataFrame:
     
+    opt = params.opt
+    print(f"Using: {opt}")
+
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(epsilon=0.005),
+        optimizer=params.opt(epsilon=params.epsilon),
         loss="categorical_crossentropy",
         metrics=['accuracy']
     )
@@ -141,7 +177,7 @@ def train(task_id: str, model: Model,
     
     reduce_lr = callbacks.ReduceLROnPlateau(
         monitor = 'val_loss', factor = 0.3, 
-        patience = 3, min_delta = 0.001, 
+        patience = 3, min_delta = 0.0005, 
         mode = 'min', verbose = 1)
     
     cbs = []
@@ -162,18 +198,20 @@ def train(task_id: str, model: Model,
     )
    
     df_hist = pd.DataFrame(history.history)
-    df_hist = df_hist.reset_index()
     df_hist["task_id"] = task_id
     df_hist["epoch"] = df_hist.index
    
     return df_hist
 
 
-def create_test_record(task_id: str, result: list[float]):
-    return pd.DataFrame({"task_id": [task_id], "test_loss" : [result[0]], "test_accuracy": [result[1]]})
+def _create_test_record(task_id: str, result: list[float], duration: timedelta):
+    return pd.DataFrame({"task_id": [task_id], "test_loss" : [result[0]], "time_secs": [duration.seconds]})
 
 
-def save_confusion_matrix(ds: Dataset, model: Model, task_id: str) -> None:
+def _save_confusion_matrix(path: Path, ds: Dataset, model: Model, task_id: str) -> None:
+    filepath = f"artefacts/conf_mat_{task_id}.png"
+    filepath = path / filepath
+    
     probabilities = model.predict(ds)
     predictions = np.argmax(probabilities, axis=1)
 
@@ -184,4 +222,68 @@ def save_confusion_matrix(ds: Dataset, model: Model, task_id: str) -> None:
     disp = ConfusionMatrixDisplay(result, display_labels=[0,1,2,3,4])
     disp.plot()
     disp.ax_.set_title(task_id)
-    disp.figure_.savefig(f"artefacts/conf_mat_{task_id}.png", dpi=300)
+    
+    print(f"Saving confusion matrix to {path}")
+    disp.figure_.savefig(filepath, dpi=300)
+    
+    
+def create_vgg_like_model(params: Params) -> ModelWrapper:
+    inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
+    x = Conv2D(32, (3, 3), padding='same', activation='relu')(inputs)
+    x = Conv2D(32, (3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.25)(x)
+    x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.25)(x)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
+    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D(pool_size=(2,2))(x)
+    x = Dropout(0.25)(x)
+
+    # classification layers
+    x = Flatten()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.5)(x)
+
+    outputs = Dense(5, activation="softmax")(x)
+    model = keras.Model(inputs, outputs)
+
+    return ModelWrapper(model, None)
+
+
+def create_simple_model(params: Params) -> Model:
+    m = keras.Sequential([
+        
+        tf.keras.Input(shape=(params.image_size, params.image_size, 3)),
+        
+        # First Convolutional Block
+        layers.Conv2D(filters=32, kernel_size=5, activation="relu", padding='same'),
+        layers.Conv2D(filters=32, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Second Convolutional Block
+        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Third Convolutional Block
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Classifier Head
+        layers.Flatten(),
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(units=5, activation="softmax"),
+    ])
+    return ModelWrapper(m, None)
