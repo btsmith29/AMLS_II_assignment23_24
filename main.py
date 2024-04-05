@@ -48,12 +48,13 @@ def main(download=False):
   print(f"Class Weights: {class_weights}")
   
   print("\n==== Task A: Explore Batch Size ====")
-  for bs in [64, 128, 192, 256]:
+  #for bs in [64, 128, 192, 256]:
+  for bs in [64, 128]:
       print(f"Batch Size: {bs}")
       ds_train = ds_train.rebatch(bs)
       ds_valid = ds_valid.rebatch(bs)
       model = create_model(tf.keras.applications.ConvNeXtTiny, params)
-      # run_task(f"A_{bs}", model, ds_train, ds_valid, ds_test, params, collector)
+      run_task(f"A_{bs}", model, ds_train, ds_valid, ds_test, params, collector)
 
 
 if __name__ == "__main__":
