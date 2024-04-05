@@ -6,7 +6,13 @@ import tensorflow as tf
 import os
 import zipfile
 
-from AMLS_II_assignment23_24.model.util import Params
+# handle different structure Kaggle (Notebook) vs. Colab (Modules)
+# this wouldn't be kept in any "production" version.
+try:
+    from AMLS_II_assignment23_24.model.util import Params
+except ModuleNotFoundError:
+    pass
+
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
@@ -20,8 +26,10 @@ from typing import Tuple
 
 def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset, Dataset, Dataset, dict]:
     """
+    Main data preprocessing function - extracts the data to the given path.
+    Returns a tuple of Training, Validation, Test datasets, along with class weights.
     """
-    file = download_data(path, force)
+    file = _download_data(path, force)
     
     data_path = path / "data"
     if force:
@@ -34,23 +42,25 @@ def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset
             z.extractall(data_path)
         
     df_images = pd.read_csv((data_path / "train.csv"))
-   
+    
     X_train, X_test, y_train, y_test = train_test_split(df_images.image_id, df_images.label, test_size=0.2, random_state=12)
+    
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.25, random_state=12)
     
-    train_path = create_ds_tree(X_train, y_train, data_path, "train")
-    valid_path = create_ds_tree(X_valid, y_valid, data_path, "valid")
-    test_path = create_ds_tree(X_test, y_test, data_path, "test")
+    train_path = _create_ds_tree(X_train, y_train, data_path, "train")
+    valid_path = _create_ds_tree(X_valid, y_valid, data_path, "valid")
+    test_path = _create_ds_tree(X_test, y_test, data_path, "test")
     
-    ds_train = create_dataset(train_path, params.image_size, params.batch_size)
-    ds_valid = create_dataset(valid_path, params.image_size, params.batch_size)
-    ds_test = create_dataset(test_path, params.image_size, params.batch_size)
+    ds_train = _create_dataset(train_path, params.image_size, params.batch_size)
+    ds_valid = _create_dataset(valid_path, params.image_size, params.batch_size)
+    ds_test = _create_dataset(test_path, params.image_size, params.batch_size, False)
 
-    return ds_train, ds_valid, ds_test, extract_class_weights(df_images)
+    return ds_train, ds_valid, ds_test, _extract_class_weights(df_images)
 
 
-def download_data(path: Path, force=False) -> Path:
+def _download_data(path: Path, force=False) -> Path:
     """
+    Downloads the data from the author's Google Drive account.
     """
     url = "https://drive.google.com/uc?id=1TJBf1HZxAMpowZ92BcgS5N_NPHE7LPOT"
     output = path / "data.zip"
@@ -59,7 +69,7 @@ def download_data(path: Path, force=False) -> Path:
     return output
 
 
-def create_ds_tree(x, y, path: Path, name: str) -> Path:
+def _create_ds_tree(x, y, path: Path, name: str) -> Path:
     """
     Creates the directory structure for the given dataset.
     """
@@ -80,8 +90,9 @@ def create_ds_tree(x, y, path: Path, name: str) -> Path:
     return ds_path
 
 
-def create_dataset(path: Path, img_size: int, batch_size: int = None) -> Dataset:
+def _create_dataset(path: Path, img_size: int, batch_size: int, shuffle = True) -> Dataset:
     """
+    Builds up the Dataset object from the given path.
     """
     return image_dataset_from_directory(
         path,
@@ -90,10 +101,16 @@ def create_dataset(path: Path, img_size: int, batch_size: int = None) -> Dataset
         image_size=[img_size, img_size],
         batch_size=batch_size,
         seed=12345,
+        shuffle=shuffle,
+        crop_to_aspect_ratio=True
     )
 
 
-def extract_class_weights(df_data: pd.DataFrame) -> dict:
+def _extract_class_weights(df_data: pd.DataFrame) -> dict:
+    """
+    Uses the descriptive DataFrame to calculate the class weights
+    from the distribution of the labels.
+    """
     classes = df_data.label.unique()
     class_weights = compute_class_weight(class_weight='balanced',
                                          classes=classes,
@@ -102,8 +119,34 @@ def extract_class_weights(df_data: pd.DataFrame) -> dict:
     return dict(zip(classes, class_weights))
 
 
-def augment_dataset(ds: Dataset, num_repeats: int) -> Dataset:
+def convert_dataset_to_float(ds: Dataset) -> Dataset:
     """
+    Some models require the input to be coverted to float tensors and
+    normalised into a 0-1 range.
+    """
+    def convert_to_float(image, label):
+        image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+        image = image / 255.0
+        return image, label
+
+    return ds.map(convert_to_float)
+    
+
+def cache_dataset(ds: Dataset) -> Dataset:
+    """
+    Dataset caching/pre-fetch utility.
+    """
+    return (
+        ds
+        .cache()
+        .prefetch(buffer_size=AUTOTUNE)
+    )
+
+
+def augment_dataset(ds: Dataset, num_repeats: int = 1) -> Dataset:
+    """
+    Augment the given dataset by flipping left/right, up/down, and
+    adjusting the brightness.
     """
     def augment(image, label):
         seed = 12345
@@ -116,6 +159,18 @@ def augment_dataset(ds: Dataset, num_repeats: int) -> Dataset:
         ds
         .repeat(num_repeats)
         .map(augment)
-        .cache()
-        .prefetch(buffer_size=AUTOTUNE)
     )
+
+def over_sample_class(ds: Dataset, class_label: int, batch_size: int, num_repeats: int = 1) -> Dataset:
+    """
+    Over-samples the given class label by the number of repeats given.  Re-batch to the given size.
+    Returns a combined, reshuffled dataset.
+    """
+    # filter dataset to just the class_label
+    ds_filt = ds.unbatch().filter(lambda x, label: tf.equal(tf.argmax(label, axis=0), class_label))
+    ds_filt = ds.repeat(num_repeats)
+    # combined with original dataset, re-shuffle, and re-batch
+    ds_over = tf.data.Dataset.concatenate(ds.unbatch(), ds_filt)
+    ds_over = ds_over.shuffle(100000)
+    ds_over = ds_over.batch(batch_size)
+    return ds_over
