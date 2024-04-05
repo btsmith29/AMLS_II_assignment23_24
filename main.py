@@ -9,47 +9,53 @@ Options:
   --download  download data from source
 """
 
+import datetime
 import os
 import pandas as pd
 import tensorflow as tf
 
-from AMLS_II_assignment23_24.data_processing import pre_processing as data
-from AMLS_II_assignment23_24.model import util as model_util
-from AMLS_II_assignment23_24.model.util import Params, ResultCollector
+# handle different structure Kaggle (Notebook) vs. Colab (Modules)
+# this wouldn't be kept in any "production" version.
+try:
+    from AMLS_II_assignment23_24.data_processing.pre_processing import data_preprocessing, rebatch
+    from AMLS_II_assignment23_24.model import util as model_util
+    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model
+except ModuleNotFoundError:
+    pass
+
 from docopt import docopt
 from pathlib import Path
+from tensorflow.keras.optimizers import Adam, AdamW
 
 
 def main(download=False):
 
   tf.random.set_seed(67890)
-
-  #DEFAULT_PARAMS = Params(255, 196, 50, True, 5, False)
-  DEFAULT_PARAMS = Params(50, 196, 1, True, 5, False)
-  print(DEFAULT_PARAMS)
-
+  
+  # Starting set of params
+  params = Params(255, 196, 1, 0.005, True, 7, False, Adam)
+  
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
-
+  
   collector = ResultCollector(ARTEFACTS_PATH)
-
+  collector.restore_results()
+  
   # Process Data
-  print("==== Loading Data ====")
+  print("================")
+  print("= Loading Data =")
+  print("================")
   cwd = os.getcwd()
-  ds_train, ds_valid, ds_test, class_weights = data.data_preprocessing(Path(cwd), DEFAULT_PARAMS)
+  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(Path(cwd), params)
   print(f"Class Weights: {class_weights}")
-
-  print("==== Task A: Baseline Model ====")
-  baseline_model = model_util.create_model(tf.keras.applications.ConvNeXtBase, "baseline_model", DEFAULT_PARAMS)
-  df_train, df_test = model_util.run_task("a_base", baseline_model, ds_train, ds_valid, ds_test, DEFAULT_PARAMS)
-  collector.add_task_results(df_train, df_test)
-
-  # print("==== Task B: Baseline + Data Augmentation ====")
-  # ds_train_aug = data.augment_dataset(ds_train, 2)
-  # baseline_model2 = model_util.create_model(tf.keras.applications.ConvNeXtBase, "baseline_model", DEFAULT_PARAMS)
-  # df_train, df_test = model_util.run_task("task_b", baseline_model2, ds_train_aug, ds_valid, ds_test, DEFAULT_PARAMS)
-  # print(df_train)
-  # print(df_test)
+  
+  print("\n==== Task A: Explore Batch Size ====")
+  for bs in [64, 128, 192, 256]:
+      print(f"Batch Size: {bs}")
+      ds_train = ds_train.rebatch(bs)
+      ds_valid = ds_valid.rebatch(bs)
+      model = create_model(tf.keras.applications.ConvNeXtTiny, params)
+      run_task(f"A_{bs}", model, ds_train, ds_valid, ds_test, params, collector)
 
 
 if __name__ == "__main__":
