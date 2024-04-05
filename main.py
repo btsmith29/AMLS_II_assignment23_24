@@ -8,7 +8,6 @@ Usage:
 Options:
   --download  download data from source
 """
-
 import datetime
 import os
 import pandas as pd
@@ -17,8 +16,7 @@ import tensorflow as tf
 # handle different structure Kaggle (Notebook) vs. Colab (Modules)
 # this wouldn't be kept in any "production" version.
 try:
-    from AMLS_II_assignment23_24.data_processing.pre_processing import data_preprocessing, rebatch
-    from AMLS_II_assignment23_24.model import util as model_util
+    from AMLS_II_assignment23_24.data_processing.pre_processing import data_preprocessing
     from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model
 except ModuleNotFoundError:
     pass
@@ -55,7 +53,7 @@ def main(download=False):
       ds_train = ds_train.rebatch(bs)
       ds_valid = ds_valid.rebatch(bs)
       model = create_model(tf.keras.applications.ConvNeXtTiny, params)
-      run_task(f"A_{bs}", model, ds_train, ds_valid, ds_test, params, collector)
+      # run_task(f"A_{bs}", model, ds_train, ds_valid, ds_test, params, collector)
 
 
 if __name__ == "__main__":
