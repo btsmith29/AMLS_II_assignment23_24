@@ -2,7 +2,7 @@
 Functions for creating and training models, used across the various tasks.
 """
 import dataclasses
-import datetime
+import datetime as dt
 import keras
 import numpy as np
 import pandas as pd
@@ -145,9 +145,9 @@ def run_task(task_id: str, model_wrapper: ModelWrapper,
     print(f"Running Task: {task_id} with params {params}")
     model = model_wrapper.model
     # train
-    start = datetime.now()
+    start = dt.datetime.now()
     df_train = _train(task_id, model, ds_train, ds_valid, params)
-    end = datetime.now()
+    end = dt.datetime.now()
     # test
     test_result = model.evaluate(ds_test)
     df_test = _create_test_record(task_id, test_result, (end-start))
