@@ -17,7 +17,7 @@ import tensorflow as tf
 # this wouldn't be kept in any "production" version.
 try:
     from AMLS_II_assignment23_24.data_processing.pre_processing import data_preprocessing
-    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model
+    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model, run_task
 except ModuleNotFoundError:
     pass
 
