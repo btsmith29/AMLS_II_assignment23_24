@@ -26,12 +26,12 @@ from pathlib import Path
 from tensorflow.keras.optimizers import Adam, AdamW
 
 
-def main(download=False):
+def main(tasks:str=None, epochs:int=1, download=False):
 
   tf.random.set_seed(67890)
   
   # Starting set of params
-  params = Params(255, 196, 1, 0.005, True, 7, False, Adam)
+  params = Params(255, 196, epochs, 0.005, True, 7, False, Adam)
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
@@ -46,14 +46,22 @@ def main(download=False):
   cwd = Path(os.getcwd())
   ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
   print(f"Class Weights: {class_weights}")
-  
-  print("\n==== Task A: Explore Batch Size ====")
-  for bs in [64, 128]:
-      print(f"Batch Size: {bs}")
-      params.batch_size = bs
-      ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
-      model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
-      run_task(f"A_{bs}", model, cache_dataset(ds_train), cache_dataset(ds_valid), cache_dataset(ds_test), params, collector)
+
+  if run_task(tasks, "A"):
+    print("\n==== Task A: Explore Batch Size ====")
+    for bs in [64, 128]:
+        print(f"Batch Size: {bs}")
+        params.batch_size = bs
+        ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
+        model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
+        run_task(f"A_{bs}", model, cache_dataset(ds_train), cache_dataset(ds_valid), cache_dataset(ds_test), params, collector)
+
+
+def run_task(selector: str, task: str):
+    if (selector is None or selector == "none"):
+        return False
+    else:
+        return (selector == "all") or (task in selector)
 
 
 if __name__ == "__main__":
