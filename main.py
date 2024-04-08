@@ -43,8 +43,8 @@ def main(download=False):
   print("================")
   print("= Loading Data =")
   print("================")
-  cwd = os.getcwd()
-  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(Path(cwd), params)
+  cwd = Path(os.getcwd())
+  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
   print(f"Class Weights: {class_weights}")
   
   print("\n==== Task A: Explore Batch Size ====")
