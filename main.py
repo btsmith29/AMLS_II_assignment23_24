@@ -179,12 +179,15 @@ def main(tasks:str=None, epochs:int=1, download=False):
     # fine-tune  
     model_m.base_model.trainable = True
     run_task(f"M_tuned", model_m, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
+    model_m.base_model.trainable = False
+    model_m.model.trainable = False
 
   if _run_task(tasks, "N"):
     print("\n==== Task N: Ensemble ====")
     convnext_base = create_model(tf.keras.applications.ConvNeXtBase, "N", params, fc_layers=1, inputs=inputs)
     run_task(f"N_train", convnext_base, ds_train, ds_valid, ds_test, params, collector, class_weights)
     model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
+    model_n.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
     
 
