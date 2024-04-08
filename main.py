@@ -169,7 +169,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
   params.opt = AdamW
 
   # create common input for later ensembles
-  inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
+  inputs = tf.keras.Input(shape=(params.image_size, params.image_size, 3))
 
   model_m = None
   if _run_task(tasks, "M"):
