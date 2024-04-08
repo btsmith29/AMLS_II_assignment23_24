@@ -169,7 +169,11 @@ def create_model(base_model_fn: str, name: str, params: Params,
     # Base
     base_model = base_model_fn(weights='imagenet', include_top=False)
     base_model.trainable = False
-    base_model.name = f"{base_model.name}-{name}"
+    try:
+        base_model.name = f"{base_model.name}-{name}"
+    except AttributeError:
+        base_model._name = f"{base_model.name}-{name}"
+
     # set training=F here per https://keras.io/guides/transfer_learning/
     x = base_model(inputs, training=False)
     # Head
