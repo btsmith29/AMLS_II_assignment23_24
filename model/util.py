@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Functions for creating and training models, used across the various tasks.
 """
@@ -94,8 +95,8 @@ class ResultCollector():
                 
     def _save(self, df: pd.DataFrame, name: str) -> None:
         df.to_csv(self.path / name, index=False)
-
-
+        
+        
 @dataclasses.dataclass
 class ModelWrapper():
     """
@@ -106,35 +107,141 @@ class ModelWrapper():
     base_model: keras.Model
 
 
-def create_model(base_model_fn: str, params: Params, fc_layers = 2, fc_neurons = 1024, batch_norm = False) -> ModelWrapper:
+class LayerNamer():
+    """
+    Utility class to provide syntatic sugar for naming layers.
+    """
+    def __init__(self, name: str):
+        self.name = name
+        self.id = 0
+        
+    def n(self, prefix: str = ""):
+        self.id += 1
+        return f"{prefix}-{self.name}-{self.id}"
+        
+
+# def create_model(base_model_fn: str, params: Params,
+#                  fc_layers = 2, fc_neurons = 1024, batch_norm = False,
+#                  inputs = None) -> ModelWrapper:
+#     """
+#     Create Keras application model, e.g.
+#         tf.keras.applications.EfficientNetV2B0
+#         tf.keras.applications.ConvNeXtBase
+#     with a custom top.
+#     """
+#     if inputs is None:
+#         inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
+#     # Base
+#     base_model = base_model_fn(weights='imagenet', include_top=False)
+#     base_model.trainable = False
+#     # set training=F here per https://keras.io/guides/transfer_learning/
+#     x = base_model(inputs, training=False)
+#     # Head
+#     x = GlobalAveragePooling2D()(x)
+#     if batch_norm:
+#         x = BatchNormalization()(x)
+#     x = Flatten()(x)
+    
+#     l = 0
+#     while (l < fc_layers):
+#         x = Dense(fc_neurons, activation="relu")(x)
+#         x = Dropout(0.5)(x)
+#         l = l + 1
+    
+#     outputs = Dense(5, activation="softmax")(x)
+#     model = keras.Model(inputs, outputs)
+
+#     return ModelWrapper(model, base_model)
+
+
+def create_model(base_model_fn: str, name: str, params: Params,
+                 fc_layers = 2, fc_neurons = 1024, batch_norm = False,
+                 inputs = None) -> ModelWrapper:
     """
     Create Keras application model, e.g.
         tf.keras.applications.EfficientNetV2B0
         tf.keras.applications.ConvNeXtBase
     with a custom top.
     """
-    inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
+    n = LayerNamer(name)
+    if inputs is None:
+        inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
     # Base
     base_model = base_model_fn(weights='imagenet', include_top=False)
     base_model.trainable = False
+    base_model.name = f"{base_model.name}-{name}"
     # set training=F here per https://keras.io/guides/transfer_learning/
     x = base_model(inputs, training=False)
     # Head
-    x = GlobalAveragePooling2D()(x)
+    x = GlobalAveragePooling2D(name=n.n("pooling"))(x)
     if batch_norm:
-        x = BatchNormalization()(x)
-    x = Flatten()(x)
+        x = BatchNormalization(name=n.n("bn"))(x)
+    x = Flatten(name=n.n("flatten"))(x)
     
     l = 0
     while (l < fc_layers):
-        x = Dense(fc_neurons, activation="relu")(x)
-        x = Dropout(0.5)(x)
+        x = Dense(fc_neurons, activation="relu", name=n.n("dense"))(x)
+        x = Dropout(0.5, name=n.n("dropout"))(x)
         l = l + 1
     
-    outputs = Dense(5, activation="softmax")(x)
+    outputs = Dense(5, activation="softmax", name=n.n("dense-activation"))(x)
     model = keras.Model(inputs, outputs)
 
     return ModelWrapper(model, base_model)
+
+
+def create_simple_model(params: Params) -> Model:
+    m = keras.Sequential([
+        
+        tf.keras.Input(shape=(params.image_size, params.image_size, 3)),
+        
+        # First Convolutional Block
+        layers.Conv2D(filters=32, kernel_size=5, activation="relu", padding='same'),
+        layers.Conv2D(filters=32, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Second Convolutional Block
+        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Third Convolutional Block
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
+        layers.MaxPool2D(),
+        layers.Dropout(0.2),
+
+        # Classifier Head
+        layers.Flatten(),
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(units=5, activation="softmax"),
+    ])
+    return ModelWrapper(m, None)
+
+
+def create_model_ensemble_avg(params: Params, inputs, models: list[ModelWrapper]) -> ModelWrapper:
+    """
+    Creates an ensemble for the given models, averaging the output.
+    """
+    outputs = [m.model.outputs[0] for m in [model_a, model_b]]
+    
+    em_output = tf.keras.layers.Average()(outputs)
+    em_model = tf.keras.Model(inputs=inputs, outputs=em_output)
+    
+    # just averaging ensembled models - doesn't need fitting.
+    em_model.compile(
+        optimizer=params.opt(epsilon=params.epsilon),
+        loss="categorical_crossentropy",
+        metrics=['accuracy']
+    )
+    
+    return ModelWrapper(em_model, None)
 
 
 def run_task(task_id: str, model_wrapper: ModelWrapper,
@@ -152,7 +259,8 @@ def run_task(task_id: str, model_wrapper: ModelWrapper,
     # test
     test_result = model.evaluate(ds_test)
     df_test = _create_test_record(task_id, test_result, (end-start))
-    # save CM too
+    # save
+    collector.add_task_results(df_train, df_test)
     _save_confusion_matrix(collector.get_path(), ds_test, model, task_id)
 
 
@@ -206,11 +314,11 @@ def _train(task_id: str, model: Model,
 
 
 def _create_test_record(task_id: str, result: list[float], duration: timedelta):
-    return pd.DataFrame({"task_id": [task_id], "test_loss" : [result[0]], "time_secs": [duration.seconds]})
+    return pd.DataFrame({"task_id": [task_id], "test_loss" : [result[0]], "test_accuracy": [result[1]], "time_secs": [duration.seconds]})
 
 
 def _save_confusion_matrix(path: Path, ds: Dataset, model: Model, task_id: str) -> None:
-    filepath = f"artefacts/conf_mat_{task_id}.png"
+    filepath = f"conf_mat_{task_id}.png"
     filepath = path / filepath
     
     probabilities = model.predict(ds)
@@ -226,65 +334,3 @@ def _save_confusion_matrix(path: Path, ds: Dataset, model: Model, task_id: str) 
     
     print(f"Saving confusion matrix to {path}")
     disp.figure_.savefig(filepath, dpi=300)
-    
-    
-def create_vgg_like_model(params: Params) -> ModelWrapper:
-    inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
-    x = Conv2D(32, (3, 3), padding='same', activation='relu')(inputs)
-    x = Conv2D(32, (3, 3), padding='same', activation='relu')(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    x = Dropout(0.25)(x)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
-    x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    x = Dropout(0.25)(x)
-    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
-    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
-    x = Conv2D(128, (3, 3), padding='same', activation='relu')(x)
-    x = MaxPooling2D(pool_size=(2,2))(x)
-    x = Dropout(0.25)(x)
-
-    # classification layers
-    x = Flatten()(x)
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.5)(x)
-
-    outputs = Dense(5, activation="softmax")(x)
-    model = keras.Model(inputs, outputs)
-
-    return ModelWrapper(model, None)
-
-
-def create_simple_model(params: Params) -> Model:
-    m = keras.Sequential([
-        
-        tf.keras.Input(shape=(params.image_size, params.image_size, 3)),
-        
-        # First Convolutional Block
-        layers.Conv2D(filters=32, kernel_size=5, activation="relu", padding='same'),
-        layers.Conv2D(filters=32, kernel_size=3, activation="relu", padding='same'),
-        layers.MaxPool2D(),
-        layers.Dropout(0.2),
-
-        # Second Convolutional Block
-        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
-        layers.Conv2D(filters=64, kernel_size=3, activation="relu", padding='same'),
-        layers.MaxPool2D(),
-        layers.Dropout(0.2),
-
-        # Third Convolutional Block
-        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
-        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
-        layers.Conv2D(filters=128, kernel_size=3, activation="relu", padding='same'),
-        layers.MaxPool2D(),
-        layers.Dropout(0.2),
-
-        # Classifier Head
-        layers.Flatten(),
-        layers.Dense(512, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(512, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(units=5, activation="softmax"),
-    ])
-    return ModelWrapper(m, None)
