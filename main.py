@@ -106,7 +106,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
 
   if _run_task(tasks, "E"):
     print("\n==== Task E: Remove Fine-Tuning ====")
-    model = create_model(tf.keras.applications.EfficientNetV2B0, "E", params, bn=True)
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "E", params, batch_norm=True)
     run_task(f"E", model, ds_train_aug_over, ds_valid, ds_test, params, collector, class_weights)
     del model
 
