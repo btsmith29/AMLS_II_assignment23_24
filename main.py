@@ -82,6 +82,84 @@ def main(tasks:str=None, epochs:int=1, download=False):
         model = create_model(m, "C", params)
         run_task(f"C_{model.base_model.name}", model, ds_train_cached, ds_valid, ds_test, params, collector)
 
+  # now used AdamW optimiser
+  params.opt = AdamW
+  # oversample & augment dataset
+  ds_train_aug_over = augment_dataset(over_sample_class(ds_train, 0, params.batch_size), 2)
+  
+  if _run_task(tasks, "D"):
+    print("\n==== Task D: Best-of-Breed Model ====")
+    # initial training
+    model_d = create_model(tf.keras.applications.EfficientNetV2B0, "D", params, batch_norm=True)
+    run_task(f"D_init", model_d, ds_train_aug_over, ds_valid, ds_test, params, collector, class_weights)
+    # fine-tune by allowing base model to be re-trained
+    model_d.base_model.trainable = True
+    ft_params = dataclasses.replace(params)
+    ft_params.epochs = 1
+    ft_params.epsilon = 1e-5
+    ft_params.early_stopping_patience = 1
+    run_task(f"D_tuned", model_d, ds_train_aug_over, ds_valid, ds_test, ft_params, collector, class_weights)
+
+  print("\n==================")
+  print("= Ablation Study =")
+  print("==================")
+
+  if _run_task(tasks, "E"):
+    print("\n==== Task E: Remove Fine-Tuning ====")
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "E", params, bn=True)
+    run_task(f"E", model, ds_train_aug_over, ds_valid, ds_test, params, collector, class_weights)
+    del model
+
+  if _run_task(tasks, "F"):
+    print("\n==== Task F: Remove over-sampling ====")
+    ds_train_aug = augment_dataset(ds_train, 2)
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "F" params, batch_norm=True)
+    run_task(f"F", model, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    del model
+
+  if _run_task(tasks, "G"):
+      print("\n==== Task G: Remove Data Augmentation ====")
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "G", params, batch_norm=True)
+      run_task(f"G", model, ds_train_cached, ds_valid, ds_test, params, collector, class_weights)
+      del model
+    
+  if _run_task(tasks, "H"):
+      print("\n==== Task H: Remove Class Weights ====")
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "H" params, batch_norm=True)
+      run_task(f"H", model, ds_train_cached, ds_valid, ds_test, params, collector)
+      del model
+
+  if _run_task(tasks, "I"):
+      print("\n==== Task I: Remove Batch Norm ====")
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "I", params)
+      run_task(f"I", model, ds_train_cached, ds_valid, ds_test, params, collector)
+      del model
+
+  # now regress to Adam
+  params.opt = Adam
+
+  if _run_task(tasks, "J"):
+      print("\n==== Task J: Regress to the Adam Optimiser ====")
+      params.opt = Adam
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "J", params)
+      run_task(f"J", model, ds_train_cached, ds_valid, ds_test, params, collector)
+      del model
+
+  if _run_task(tasks, "K"):
+      print("\n==== Task K: Remove a FC Layer ====")
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "K", params, 1)
+      run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
+      del model
+
+  if _run_task(tasks, "L"):
+      print("\n==== Task L: Create a Custom Convnet ====")
+      model = create_simple_model(params)
+      simple_params = dataclasses.replace(params)
+      simple_params.epochs = 5
+      run_task(f"L", model_k,
+               convert_dataset_to_float(ds_train),
+               convert_dataset_to_float(ds_valid),
+               convert_dataset_to_float(ds_test), simple_params, collector)
 
 def _run_task(selector: str, task: str):
     if (selector is None or selector == "none"):
