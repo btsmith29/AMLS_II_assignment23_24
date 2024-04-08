@@ -56,6 +56,10 @@ def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset
     ds_valid = _create_dataset(valid_path, params.image_size, params.batch_size)
     ds_test = _create_dataset(test_path, params.image_size, params.batch_size, False)
 
+    # always cache valid & test
+    ds_valid = cache_dataset(ds_valid)
+    ds_test = cache_dataset(ds_test)
+    
     return ds_train, ds_valid, ds_test, _extract_class_weights(df_images)
 
 
