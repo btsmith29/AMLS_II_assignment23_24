@@ -45,9 +45,9 @@ def data_preprocessing(path: Path, params: Params, force=False) -> Tuple[Dataset
         
     df_images = pd.read_csv((data_path / "train.csv"))
 
-    imgs1 = random.sample(df_images[df_images.label==3].image_id.tolist(), k=5154)
-    imgs2 = df_images[df_images.label!=3].image_id.tolist()
-    df_images = df_images[df_images.image_id.isin((imgs1+imgs2))].copy()
+    # imgs1 = random.sample(df_images[df_images.label==3].image_id.tolist(), k=5154)
+    # imgs2 = df_images[df_images.label!=3].image_id.tolist()
+    # df_images = df_images[df_images.image_id.isin((imgs1+imgs2))].copy()
     
     X_train, X_test, y_train, y_test = train_test_split(df_images.image_id, df_images.label, test_size=0.2, random_state=12)
     
