@@ -233,7 +233,7 @@ def create_model_ensemble_avg(params: Params, inputs, models: list[ModelWrapper]
     """
     Creates an ensemble for the given models, averaging the output.
     """
-    outputs = [m.model.outputs[0] for m in [model_a, model_b]]
+    outputs = [m.model.outputs[0] for m in models]
     
     em_output = tf.keras.layers.Average()(outputs)
     em_model = tf.keras.Model(inputs=inputs, outputs=em_output)
