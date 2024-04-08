@@ -49,7 +49,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
 
   if _run_task(tasks, "A"):
     print("\n==== Task A: Explore Batch Size ====")
-    for bs in [64, 128]:
+    for bs in [64, 128, 196, 256]:
         print(f"Batch Size: {bs}")
         params.batch_size = bs
         ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
@@ -61,13 +61,25 @@ def main(tasks:str=None, epochs:int=1, download=False):
   ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
   ds_train_cached = cache_dataset(ds_train)
 
-  print("\n==== Task B: Explore Epsilon ====")
-  for e in [0.0025, 0.0050, 0.0075, 0.01]:
-      print(f"Epsilon: {e}")
-      p = dataclasses.replace(params)
-      p.epsilon = e
-      model = create_model(tf.keras.applications.EfficientNetB0, "B", p)
-      run_task(f"B_{e}", model, ds_train_cached, ds_valid, ds_test, p, collector)
+  if _run_task(tasks, "B"):
+    print("\n==== Task B: Explore Epsilon ====")
+    for e in [0.0025, 0.0050, 0.0075, 0.01]:
+        print(f"Epsilon: {e}")
+        p = dataclasses.replace(params)
+        p.epsilon = e
+        model = create_model(tf.keras.applications.EfficientNetB0, "B", p)
+        run_task(f"B_{e}", model, ds_train_cached, ds_valid, ds_test, p, collector)
+
+  # update based on results of Task B
+  params.epsilon = 0.0075
+
+  if _run_task(tasks, "C"):
+    print("\n==== Task C: Baseline Model Comparison ====")
+    for m in [tf.keras.applications.ConvNeXtTiny, tf.keras.applications.ConvNeXtBase,
+              tf.keras.applications.EfficientNetB0, tf.keras.applications.EfficientNetV2B0]:
+        print(f"Model: {m}")
+        model = create_model(m, "C", params)
+        run_task(f"C_{model.base_model.name}", model, ds_train_cached, ds_valid, ds_test, params, collector)
 
 
 def _run_task(selector: str, task: str):
