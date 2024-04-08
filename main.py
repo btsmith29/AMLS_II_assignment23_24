@@ -47,7 +47,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
   ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
   print(f"Class Weights: {class_weights}")
 
-  if run_task(tasks, "A"):
+  if _run_task(tasks, "A"):
     print("\n==== Task A: Explore Batch Size ====")
     for bs in [64, 128]:
         print(f"Batch Size: {bs}")
@@ -57,7 +57,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
         run_task(f"A_{bs}", model, cache_dataset(ds_train), cache_dataset(ds_valid), cache_dataset(ds_test), params, collector)
 
 
-def run_task(selector: str, task: str):
+def _run_task(selector: str, task: str):
     if (selector is None or selector == "none"):
         return False
     else:
