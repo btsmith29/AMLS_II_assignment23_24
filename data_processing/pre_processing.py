@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import gdown
 import keras
 import pandas as pd
@@ -161,14 +162,14 @@ def augment_dataset(ds: Dataset, num_repeats: int = 1) -> Dataset:
         .map(augment)
     )
 
-def over_sample_class(ds: Dataset, class_label: int, batch_size: int, num_repeats: int = 1) -> Dataset:
+
+def over_sample_class(ds: Dataset, class_label: int, batch_size: int) -> Dataset:
     """
-    Over-samples the given class label by the number of repeats given.  Re-batch to the given size.
+    Over-samples the given class label.  Re-batch to the given size.
     Returns a combined, reshuffled dataset.
     """
     # filter dataset to just the class_label
     ds_filt = ds.unbatch().filter(lambda x, label: tf.equal(tf.argmax(label, axis=0), class_label))
-    ds_filt = ds.repeat(num_repeats)
     # combined with original dataset, re-shuffle, and re-batch
     ds_over = tf.data.Dataset.concatenate(ds.unbatch(), ds_filt)
     ds_over = ds_over.shuffle(100000)
