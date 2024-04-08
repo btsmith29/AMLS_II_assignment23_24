@@ -8,6 +8,7 @@ Usage:
 Options:
   --download  download data from source
 """
+import dataclasses
 import datetime
 import os
 import pandas as pd
