@@ -54,7 +54,20 @@ def main(tasks:str=None, epochs:int=1, download=False):
         params.batch_size = bs
         ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
         model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
-        run_task(f"A_{bs}", model, cache_dataset(ds_train), cache_dataset(ds_valid), cache_dataset(ds_test), params, collector)
+        run_task(f"A_{bs}", model, cache_dataset(ds_train), ds_valid, ds_test, params, collector)
+
+  # update based on results of Task A, regenerating data cleans up batch-sizes
+  params.batch_size = 192
+  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
+  ds_train_cached = cache_dataset(ds_train)
+
+  print("\n==== Task B: Explore Epsilon ====")
+  for e in [0.0025, 0.0050, 0.0075, 0.01]:
+      print(f"Epsilon: {e}")
+      p = dataclasses.replace(params)
+      p.epsilon = e
+      model = create_model(tf.keras.applications.EfficientNetB0, "B", p)
+      run_task(f"B_{e}", model, ds_train_cached, ds_valid, ds_test, p, collector)
 
 
 def _run_task(selector: str, task: str):
