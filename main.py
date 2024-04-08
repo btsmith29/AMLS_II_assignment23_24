@@ -16,8 +16,8 @@ import tensorflow as tf
 # handle different structure Kaggle (Notebook) vs. Colab (Modules)
 # this wouldn't be kept in any "production" version.
 try:
-    from AMLS_II_assignment23_24.data_processing.pre_processing import data_preprocessing
-    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, cache_dataset, create_model, run_task
+    from AMLS_II_assignment23_24.data_processing.pre_processing import cache_dataset, data_preprocessing
+    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model, run_task
 except ModuleNotFoundError:
     pass
 
