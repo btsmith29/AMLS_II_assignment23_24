@@ -175,17 +175,17 @@ def main(tasks:str=None, epochs:int=1, download=False):
   if _run_task(tasks, "M"):
     print("\n==== Task M: New Best of Breed ====")
     model_m = create_model(tf.keras.applications.EfficientNetV2B0, "M", params, fc_layers=1, inputs=inputs)
-    run_task(f"M_init", model_m, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    run_task(f"M_init", model_m, ds_train, ds_valid, ds_test, params, collector, class_weights)
     # fine-tune  
     model_m.base_model.trainable = True
-    run_task(f"M_tuned", model_m, ds_train_aug, ds_valid, ds_test, ft_params, collector, class_weights)
+    run_task(f"M_tuned", model_m, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
 
   if _run_task(tasks, "N"):
     print("\n==== Task N: Ensemble ====")
     convnext_base = create_model(tf.keras.applications.ConvNeXtBase, "N", params, fc_layers=1, inputs=inputs)
-    run_task(f"N_train", convnext_base, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    run_task(f"N_train", convnext_base, ds_train, ds_valid, ds_test, params, collector, class_weights)
     model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
-    run_task(f"N", model_n, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
     
 
 
