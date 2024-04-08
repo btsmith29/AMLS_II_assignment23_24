@@ -10,6 +10,7 @@ Options:
 """
 import dataclasses
 import datetime
+import keras
 import os
 import pandas as pd
 import tensorflow as tf
