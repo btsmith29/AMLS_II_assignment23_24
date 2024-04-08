@@ -113,7 +113,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
   if _run_task(tasks, "F"):
     print("\n==== Task F: Remove over-sampling ====")
     ds_train_aug = augment_dataset(ds_train, 2)
-    model = create_model(tf.keras.applications.EfficientNetV2B0, "F" params, batch_norm=True)
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "F", params, batch_norm=True)
     run_task(f"F", model, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
     del model
 
@@ -125,7 +125,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
     
   if _run_task(tasks, "H"):
       print("\n==== Task H: Remove Class Weights ====")
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "H" params, batch_norm=True)
+      model = create_model(tf.keras.applications.EfficientNetV2B0, "H", params, batch_norm=True)
       run_task(f"H", model, ds_train_cached, ds_valid, ds_test, params, collector)
       del model
 
