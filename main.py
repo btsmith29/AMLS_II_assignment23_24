@@ -52,7 +52,7 @@ def main(download=False):
       print(f"Batch Size: {bs}")
       params.batch_size = bs
       ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
-      model = create_model(tf.keras.applications.EfficientNetB0, params)
+      model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
       run_task(f"A_{bs}", model, cache_dataset(ds_train), cache_dataset(ds_valid), cache_dataset(ds_test), params, collector)
 
 
