@@ -16,7 +16,9 @@ This repository contains all the code required to download & preprocess the data
 `/model/`
 > `util.py`: This file has the functions required to create the convolutional neural network (ConvNet) models, along with the utility code to run and store details of the tasks.  Also included here are some ancilliary functions to produce confusion matrices and learning rate curve graphs.
 
-`/results/`: The directory hosts the results.  Each task has its own subdirectory, which contains the confusion matrices and learning rate curves.  The parent directory contains the full training history (`train_details.csv`) and test scores (`test_scores.csv`).
+`/results/`:
+> The directory hosts the results.  Each task has its own subdirectory, which contains the confusion matrices and learning rate curves.  The parent directory contains the full training history (`train_details.csv`) and test scores (`test_scores.csv`).
+
 
 `/workings/`
 > `assignment-workings.ipynb`: As noted in the 'Development Approach' section of the report, the author used this notebook to develop the solutions on Kaggle before carving the code into the module structure described here.  It isn't meant to be part of the assignment submission, per se, but the revision history evidences how the solution was built-up.
