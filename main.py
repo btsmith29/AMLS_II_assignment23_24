@@ -18,7 +18,7 @@ import tensorflow as tf
 # this wouldn't be kept in any "production" version.
 try:
     from AMLS_II_assignment23_24.data_processing.pre_processing import augment_dataset, cache_dataset, data_preprocessing, over_sample_class
-    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model, run_task
+    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model, create_simple_model, run_task
 except ModuleNotFoundError:
     pass
 
@@ -84,8 +84,16 @@ def main(tasks:str=None, epochs:int=1, download=False):
 
   # now used AdamW optimiser
   params.opt = AdamW
+
+  # create some re-usable fine-tuning parameters
+  ft_params = dataclasses.replace(params)
+  ft_params.epochs = 1
+  ft_params.epsilon = 1e-5
+  ft_params.early_stopping_patience = 1  
+  
   # oversample & augment dataset
   ds_train_aug_over = augment_dataset(over_sample_class(ds_train, 0, params.batch_size), 2)
+  ds_train_aug = augment_dataset(ds_train, 2)
   
   if _run_task(tasks, "D"):
     print("\n==== Task D: Best-of-Breed Model ====")
@@ -94,10 +102,6 @@ def main(tasks:str=None, epochs:int=1, download=False):
     run_task(f"D_init", model_d, ds_train_aug_over, ds_valid, ds_test, params, collector, class_weights)
     # fine-tune by allowing base model to be re-trained
     model_d.base_model.trainable = True
-    ft_params = dataclasses.replace(params)
-    ft_params.epochs = 1
-    ft_params.epsilon = 1e-5
-    ft_params.early_stopping_patience = 1
     run_task(f"D_tuned", model_d, ds_train_aug_over, ds_valid, ds_test, ft_params, collector, class_weights)
 
   print("\n==================")
@@ -112,54 +116,77 @@ def main(tasks:str=None, epochs:int=1, download=False):
 
   if _run_task(tasks, "F"):
     print("\n==== Task F: Remove over-sampling ====")
-    ds_train_aug = augment_dataset(ds_train, 2)
     model = create_model(tf.keras.applications.EfficientNetV2B0, "F", params, batch_norm=True)
     run_task(f"F", model, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
     del model
 
   if _run_task(tasks, "G"):
-      print("\n==== Task G: Remove Data Augmentation ====")
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "G", params, batch_norm=True)
-      run_task(f"G", model, ds_train_cached, ds_valid, ds_test, params, collector, class_weights)
-      del model
+    print("\n==== Task G: Remove Data Augmentation ====")
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "G", params, batch_norm=True)
+    run_task(f"G", model, ds_train_cached, ds_valid, ds_test, params, collector, class_weights)
+    del model
     
   if _run_task(tasks, "H"):
-      print("\n==== Task H: Remove Class Weights ====")
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "H", params, batch_norm=True)
-      run_task(f"H", model, ds_train_cached, ds_valid, ds_test, params, collector)
-      del model
+    print("\n==== Task H: Remove Class Weights ====")
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "H", params, batch_norm=True)
+    run_task(f"H", model, ds_train_cached, ds_valid, ds_test, params, collector)
+    del model
 
   if _run_task(tasks, "I"):
-      print("\n==== Task I: Remove Batch Norm ====")
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "I", params)
-      run_task(f"I", model, ds_train_cached, ds_valid, ds_test, params, collector)
-      del model
+    print("\n==== Task I: Remove Batch Norm ====")
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "I", params)
+    run_task(f"I", model, ds_train_cached, ds_valid, ds_test, params, collector)
+    del model
 
   # now regress to Adam
   params.opt = Adam
 
   if _run_task(tasks, "J"):
-      print("\n==== Task J: Regress to the Adam Optimiser ====")
-      params.opt = Adam
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "J", params)
-      run_task(f"J", model, ds_train_cached, ds_valid, ds_test, params, collector)
-      del model
+    print("\n==== Task J: Regress to the Adam Optimiser ====")
+    params.opt = Adam
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "J", params)
+    run_task(f"J", model, ds_train_cached, ds_valid, ds_test, params, collector)
+    del model
 
   if _run_task(tasks, "K"):
-      print("\n==== Task K: Remove a FC Layer ====")
-      model = create_model(tf.keras.applications.EfficientNetV2B0, "K", params, 1)
-      run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
-      del model
+    print("\n==== Task K: Remove a FC Layer ====")
+    model = create_model(tf.keras.applications.EfficientNetV2B0, "K", params, 1)
+    run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
+    del model
 
   if _run_task(tasks, "L"):
-      print("\n==== Task L: Create a Custom Convnet ====")
-      model = create_simple_model(params)
-      simple_params = dataclasses.replace(params)
-      simple_params.epochs = 5
-      run_task(f"L", model_k,
-               convert_dataset_to_float(ds_train),
-               convert_dataset_to_float(ds_valid),
-               convert_dataset_to_float(ds_test), simple_params, collector)
+    print("\n==== Task L: Create a Custom Convnet ====")
+    model = create_simple_model(params)
+    simple_params = dataclasses.replace(params)
+    simple_params.epochs = 5
+    run_task(f"L", model_k,
+             convert_dataset_to_float(ds_train),
+             convert_dataset_to_float(ds_valid),
+             convert_dataset_to_float(ds_test), simple_params, collector)
+
+  # return to AdamW for best-of-breed
+  params.opt = AdamW
+
+  # create common input for later ensembles
+  inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
+
+  model_m = None
+  if _run_task(tasks, "M"):
+    print("\n==== Task M: New Best of Breed ====")
+    model_m = create_model(tf.keras.applications.EfficientNetV2B0, "M", params, fc=1, inputs=inputs)
+    run_task(f"M_init", model_m, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    # fine-tune  
+    model_m.base_model.trainable = True
+    run_task(f"M_tuned", model_m, ds_train_aug, ds_valid, ds_test, ft_params, collector, class_weights)
+
+  if _run_task(tasks, "N"):
+    print("\n==== Task N: Ensemble ====")
+    convnext_base = create_model(tf.keras.applications.ConvNeXtBase, "N", params, fc=1, inputs=inputs)
+    run_task(f"N_train", convnext_base, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
+    run_task(f"N", model_n, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
+    
+
 
 def _run_task(selector: str, task: str):
     if (selector is None or selector == "none"):
