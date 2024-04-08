@@ -45,7 +45,7 @@ def main(download=False):
   print("================")
   cwd = os.getcwd()
   ds_train, ds_valid, ds_test, class_weights = data_preprocessing(Path(cwd), params)
-    print(f"Class Weights: {class_weights}")
+  print(f"Class Weights: {class_weights}")
   
   print("\n==== Task A: Explore Batch Size ====")
   for bs in [64, 128]:
