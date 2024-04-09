@@ -33,7 +33,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
   tf.random.set_seed(67890)
   
   # Starting set of params
-  params = Params(240, 196, epochs, 0.005, True, 7, False, Adam)
+  params = Params(250, 196, epochs, 0.005, True, 7, False, Adam)
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
