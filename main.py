@@ -38,7 +38,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
   tf.random.set_seed(67890)
   
   # Starting set of params
-  params = Params(242, 196, image_size, 0.005, True, 7, False, Adam)
+  params = Params(image_size, 196, epochs, 0.005, True, 7, False, Adam)
 
   model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
   model.model.summary()
