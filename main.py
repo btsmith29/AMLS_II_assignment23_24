@@ -35,13 +35,14 @@ from tensorflow.keras.optimizers import Adam, AdamW
 
 def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False):
 
-  model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
-  model.model.summary()
-
   tf.random.set_seed(67890)
   
   # Starting set of params
   params = Params(242, 196, image_size, 0.005, True, 7, False, Adam)
+
+  model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
+  model.model.summary()
+  return 
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
