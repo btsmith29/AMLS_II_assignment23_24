@@ -39,10 +39,6 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
   
   # Starting set of params
   params = Params(image_size, 196, epochs, 0.005, True, 7, False, Adam)
-
-  model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
-  model.model.summary()
-  return 
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
