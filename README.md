@@ -28,9 +28,9 @@ This repository contains all the code required to download & pre-process the dat
 
 `main.py`: This orchestrates the data pre-processing and the various learning tasks. It takes three arguments (also documented in the script):
   * `tasks`: a list of tasks to run, e.g. "ACEFGHI"
-  * `image_size`: Image size on which to train the models, e.g. 255
-  * `epochs`: the number of epochs for which to run each task (useful to set a low value for end-to-end testing)
-  * `force:`: whether to force the data download and pre-processing steps to be repeated, even if not required
+  * `image_size`: Image size on which to train the models (e.g. 255; useful to lower in lower memory environments)
+  * `epochs`: the number of epochs for which to run each task (e.g. 75; useful to lower in lower memory environments)
+  * `force:`: whether to force the data download and pre-processing steps to be repeated, even if not required.
 
 ## Requirements
 
