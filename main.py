@@ -35,6 +35,9 @@ from tensorflow.keras.optimizers import Adam, AdamW
 
 def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False):
 
+  model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
+  model.model.summary()
+
   tf.random.set_seed(67890)
   
   # Starting set of params
