@@ -3,10 +3,15 @@
 main assignment script
 
 Usage:
-  main [--download]
+  main [--tasks=<tasks>] [--image_size=<image_size>] [--epochs=<epochs>] [--force_download]
+  main (-h|--help)
 
 Options:
-  --download  download data from source
+    -h --help                   Show this help dialogue
+    --tasks=<tasks>             Which tasks to run (e.g. "ABCEL", or "all", or "none") [default: "A"]
+    ---image_size=<image_size>  Image size on which to train the models [default: 255]
+    --epochs=<epochs>           Number of epochs to train for, as an upper bound [default: 75]
+    --force_download            Force download of data even if it already exists locally
 """
 import dataclasses
 import datetime
@@ -28,12 +33,12 @@ from pathlib import Path
 from tensorflow.keras.optimizers import Adam, AdamW
 
 
-def main(tasks:str=None, epochs:int=1, download=False):
+def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False):
 
   tf.random.set_seed(67890)
   
   # Starting set of params
-  params = Params(242, 196, epochs, 0.005, True, 7, False, Adam)
+  params = Params(242, 196, image_size, 0.005, True, 7, False, Adam)
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
@@ -199,6 +204,23 @@ def _run_task(selector: str, task: str):
         return (selector == "all") or (task in selector)
 
 
+def _handle_docopt_arguments(args):
+    """
+    Remove double dash from docopt arguments, replace the single dash with underscore and remove --help
+
+    Args:
+        args (dict): dictionary of docopt arguments (ex: {'--ftp': True, '--upload': True, '--delete': False})
+
+     Return:
+         dictionary of docopt arguments
+    """
+    return {
+        key.replace("--", "").replace("-", "_"): val
+        for key, val in args.items()
+        if key != "--help"
+    }
+
+
 if __name__ == "__main__":
-  cmd_args = core.handle_docopt_arguments(docopt(__doc__))
+  cmd_args = _handle_docopt_arguments(docopt(__doc__))
   main(**cmd_args)
