@@ -33,7 +33,7 @@ def main(tasks:str=None, epochs:int=1, download=False):
   tf.random.set_seed(67890)
   
   # Starting set of params
-  params = Params(225, 196, epochs, 0.005, True, 7, False, Adam)
+  params = Params(240, 196, epochs, 0.005, True, 7, False, Adam)
   
   ARTEFACTS_PATH = Path("artefacts")
   ARTEFACTS_PATH.mkdir(parents=True, exist_ok=True)
@@ -175,10 +175,10 @@ def main(tasks:str=None, epochs:int=1, download=False):
   if _run_task(tasks, "M"):
     print("\n==== Task M: New Best of Breed ====")
     model_m = create_model(tf.keras.applications.EfficientNetV2B0, "M", params, fc_layers=1, inputs=inputs)
-    run_task(f"M_init", model_m, ds_train, ds_valid, ds_test, params, collector, class_weights)
+    run_task(f"M_init", model_m, ds_train_aug, ds_valid, ds_test, params, collector, class_weights)
     # fine-tune  
     model_m.base_model.trainable = True
-    run_task(f"M_tuned", model_m, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
+    run_task(f"M_tuned", model_m, ds_train_aug, ds_valid, ds_test, ft_params, collector, class_weights)
     model_m.base_model.trainable = False
     model_m.model.trainable = False
 
