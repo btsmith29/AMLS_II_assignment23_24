@@ -5,8 +5,10 @@ Functions for creating and training models, used across the various tasks.
 import dataclasses
 import datetime as dt
 import keras
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import tensorflow as tf
 
 from datetime import timedelta
@@ -118,8 +120,8 @@ class LayerNamer():
     def n(self, prefix: str = ""):
         self.id += 1
         return f"{prefix}-{self.name}-{self.id}"
-        
 
+    
 def create_model(base_model_fn: str, name: str, params: Params,
                  fc_layers = 2, fc_neurons = 1024, batch_norm = False,
                  inputs = None) -> ModelWrapper:
@@ -226,13 +228,41 @@ def run_task(task_id: str, model_wrapper: ModelWrapper,
     start = dt.datetime.now()
     df_train = _train(task_id, model, ds_train, ds_valid, params)
     end = dt.datetime.now()
-    # test
+    # scores
+    train_result = model.evaluate(ds_train)
+    valid_result = model.evaluate(ds_valid)
     test_result = model.evaluate(ds_test)
-    df_test = _create_test_record(task_id, test_result, (end-start))
+    print(f"Train Result: {train_result}; Valid Result: {valid_result}; Test Result: {test_result}")
+    # shame can't get the early stopping epoch from the monitor itself
+    best_epoch = np.argmin(df_train.val_loss) + 1
+    total_epochs = len(df_train)
+    df_test = _create_test_record(task_id, train_result, valid_result, test_result, best_epoch, total_epochs, (end-start))
     # save
     collector.add_task_results(df_train, df_test)
     _save_confusion_matrix(collector.get_path(), ds_test, model, task_id)
+    
 
+def plot_task_comp_by_prefix(collector: ResultCollector, task: str) -> None:
+    task_ids = [x for x in collector.get_train_details().task_id.unique() if x.startswith(f"{task}_")]
+    plot_task_comp(collector, task_ids)
+    
+
+def plot_task_comp(collector: ResultCollector, task_ids: list) -> None:
+    _plot_task_comp(collector.get_train_details(), task_ids, collector.get_path())
+    
+
+def _plot_task_comp(df_history: pd.DataFrame, task_ids: list, path: Path) -> None:
+    df = df_history[(df_history.task_id.isin(task_ids))].copy()
+    df["loss_gap"] = df.val_loss - df.loss
+    df_grp = df[["epoch","task_id", "val_accuracy", "val_loss", "loss_gap"]].groupby(["epoch", "task_id"]).mean()
+    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(16, 8))
+    sns.lineplot(data=df_grp, x="epoch", y="val_accuracy", hue="task_id", ax=ax1)
+    sns.lineplot(data=df_grp, x="epoch", y="val_loss", hue="task_id", ax=ax2)
+    sns.lineplot(data=df_grp, x="epoch", y="loss_gap", hue="task_id", ax=ax3)
+    # add to artifacts
+    file_name = "learning_curves_" + "_".join(task_ids)
+    plt.title(file_name)
+    plt.savefig(path / file_name)
 
 def _train(task_id: str, model: Model,
              ds_train_: Dataset, ds_valid_: Dataset,
@@ -278,13 +308,24 @@ def _train(task_id: str, model: Model,
    
     df_hist = pd.DataFrame(history.history)
     df_hist["task_id"] = task_id
-    df_hist["epoch"] = df_hist.index
+    df_hist["epoch"] = (df_hist.index+1)
    
     return df_hist
 
 
-def _create_test_record(task_id: str, result: list[float], duration: timedelta):
-    return pd.DataFrame({"task_id": [task_id], "test_loss" : [result[0]], "test_accuracy": [result[1]], "time_secs": [duration.seconds]})
+def _create_test_record(task_id: str, train_result: list[float],
+                        valid_result: list[float], test_result: list[float],
+                        best_epoch: int, total_epochs: int, duration: timedelta):
+    return pd.DataFrame({"task_id": [task_id], 
+                         "train_accuracy": [train_result[1]],
+                         "train_loss" : [train_result[0]],
+                         "valid_accuracy": [valid_result[1]],
+                         "valid_loss" : [valid_result[0]],
+                         "test_accuracy": [test_result[1]],
+                         "test_loss" : [test_result[0]],
+                         "best_epoch": best_epoch,
+                         "total_epochs": total_epochs,
+                         "time_secs": [duration.seconds]})
 
 
 def _save_confusion_matrix(path: Path, ds: Dataset, model: Model, task_id: str) -> None:
