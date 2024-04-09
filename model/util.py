@@ -120,40 +120,6 @@ class LayerNamer():
         return f"{prefix}-{self.name}-{self.id}"
         
 
-# def create_model(base_model_fn: str, params: Params,
-#                  fc_layers = 2, fc_neurons = 1024, batch_norm = False,
-#                  inputs = None) -> ModelWrapper:
-#     """
-#     Create Keras application model, e.g.
-#         tf.keras.applications.EfficientNetV2B0
-#         tf.keras.applications.ConvNeXtBase
-#     with a custom top.
-#     """
-#     if inputs is None:
-#         inputs = keras.Input(shape=(params.image_size, params.image_size, 3))
-#     # Base
-#     base_model = base_model_fn(weights='imagenet', include_top=False)
-#     base_model.trainable = False
-#     # set training=F here per https://keras.io/guides/transfer_learning/
-#     x = base_model(inputs, training=False)
-#     # Head
-#     x = GlobalAveragePooling2D()(x)
-#     if batch_norm:
-#         x = BatchNormalization()(x)
-#     x = Flatten()(x)
-    
-#     l = 0
-#     while (l < fc_layers):
-#         x = Dense(fc_neurons, activation="relu")(x)
-#         x = Dropout(0.5)(x)
-#         l = l + 1
-    
-#     outputs = Dense(5, activation="softmax")(x)
-#     model = keras.Model(inputs, outputs)
-
-#     return ModelWrapper(model, base_model)
-
-
 def create_model(base_model_fn: str, name: str, params: Params,
                  fc_layers = 2, fc_neurons = 1024, batch_norm = False,
                  inputs = None) -> ModelWrapper:
