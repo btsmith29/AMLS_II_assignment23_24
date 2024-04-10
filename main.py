@@ -178,7 +178,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model = create_simple_model(params)
     simple_params = dataclasses.replace(params)
     simple_params.epochs = 5
-    run_task(f"L", model_k,
+    run_task(f"L", model,
              convert_dataset_to_float(ds_train),
              convert_dataset_to_float(ds_valid),
              convert_dataset_to_float(ds_test), simple_params, collector)
@@ -204,8 +204,10 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     print("\n==== Task N: Ensemble ====")
     convnext_base = create_model(tf.keras.applications.ConvNeXtBase, "N", params, fc_layers=1, inputs=inputs)
     run_task(f"N_train", convnext_base, ds_train, ds_valid, ds_test, params, collector, class_weights)
+    convnext_base.base_model.trainable = False
+    convnext_base.model.trainable = False
     model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
-    model_n.trainable = False
+    model_n.model.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
 
 
