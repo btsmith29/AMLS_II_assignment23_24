@@ -24,7 +24,15 @@ import tensorflow as tf
 # this wouldn't be kept in any "production" version.
 try:
     from AMLS_II_assignment23_24.data_processing.pre_processing import augment_dataset, cache_dataset, data_preprocessing, over_sample_class
-    from AMLS_II_assignment23_24.model.util import Params, ResultCollector, create_model, create_model_ensemble_avg, create_simple_model, run_task
+    from AMLS_II_assignment23_24.model.util import (
+      Params, 
+      ResultCollector, 
+      create_model, 
+      create_model_ensemble_avg, 
+      create_simple_model,
+      plot_task_comp_by_prefix,
+      run_task
+    )
 except ModuleNotFoundError:
     pass
 
