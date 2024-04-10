@@ -216,6 +216,10 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model_n.model.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
 
+  print("\n=======================")
+  print("= All Tasks Completed =")
+  print("=======================")
+
 
 def _run_task(selector: str, task: str):
     if (selector is None or selector == "none"):
