@@ -168,7 +168,6 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
 
   if _run_task(tasks, "J"):
     print("\n==== Task J: Regress to the Adam Optimiser ====")
-    params.opt = Adam
     model = create_model(tf.keras.applications.EfficientNetV2B0, "J", params)
     run_task(f"J", model, ds_train_cached, ds_valid, ds_test, params, collector)
     del model
