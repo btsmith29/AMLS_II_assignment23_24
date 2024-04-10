@@ -62,6 +62,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
         ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
         model = create_model(tf.keras.applications.EfficientNetB0, "A", params)
         run_task(f"A_{bs}", model, cache_dataset(ds_train), ds_valid, ds_test, params, collector)
+    plot_task_comp_by_prefix(collector, "A")
 
   # update based on results of Task A, regenerating data cleans up batch-sizes
   params.batch_size = 192
@@ -76,6 +77,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
         p.epsilon = e
         model = create_model(tf.keras.applications.EfficientNetB0, "B", p)
         run_task(f"B_{e}", model, ds_train_cached, ds_valid, ds_test, p, collector)
+    plot_task_comp_by_prefix(collector, "B")
 
   # update based on results of Task B
   params.epsilon = 0.0075
@@ -87,6 +89,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
         print(f"Model: {m}")
         model = create_model(m, "C", params)
         run_task(f"C_{model.base_model.name}", model, ds_train_cached, ds_valid, ds_test, params, collector)
+    plot_task_comp_by_prefix(collector, "C")
 
   # now used AdamW optimiser
   params.opt = AdamW
@@ -194,7 +197,6 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
     model_n.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
-    
 
 
 def _run_task(selector: str, task: str):
