@@ -261,8 +261,10 @@ def _plot_task_comp(df_history: pd.DataFrame, task_ids: list, path: Path) -> Non
     sns.lineplot(data=df_grp, x="epoch", y="loss_gap", hue="task_id", ax=ax3)
     # add to artifacts
     file_name = "learning_curves_" + "_".join(task_ids)
+    file_name = file_name.replace(".", "")
     plt.title(file_name)
     plt.savefig(path / file_name)
+
 
 def _train(task_id: str, model: Model,
              ds_train_: Dataset, ds_valid_: Dataset,
