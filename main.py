@@ -67,7 +67,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
   print("= Loading Data =")
   print("================")
   cwd = Path(os.getcwd())
-  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params)
+  ds_train, ds_valid, ds_test, class_weights = data_preprocessing(cwd, params, force_download)
   print(f"Class Weights: {class_weights}")
 
   if _run_task(tasks, "A"):
