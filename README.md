@@ -42,7 +42,7 @@ For the most part, the standard environment on Kaggle and Google Colab was suffi
 
 Specifically, the following packages were used:
 
-`dataclasses, datetime, gdown, google.colab, json, keras, matplotlib, numpy, os, pandas, pathlib, PIL, seaborn, shutil, sklearn, tensorflow, typing, zipfile`
+`dataclasses, datetime, docopt, gdown, google.colab, json, keras, matplotlib, numpy, os, pandas, pathlib, PIL, seaborn, shutil, sklearn, tensorflow, typing, zipfile`
 
 ### Infrastructure
 
