@@ -178,6 +178,8 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
     del model
 
+  plot_task_comp(collector, ["D_init", "E", "F", "G", "H", "I", "J", "K"])
+
   if _run_task(tasks, "L"):
     print("\n==== Task L: Create a Custom Convnet ====")
     model = create_simple_model(params)
