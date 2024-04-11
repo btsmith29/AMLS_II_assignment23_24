@@ -11,7 +11,7 @@ This repository contains all the code required to download & pre-process the dat
 `/data_processing/`
 > `cld_data_download.ipynb`: This interactive notebook downloads the data from Kaggle, reduces the dataset to just the jpg files and labels, and then uploads it to the author's Google Drive account for convenience (public access).
 
->` pre-processing.py`: This file contains the code to download the adjusted dataset from Google Drive and make it available to the machine learning algorithms in standard formats (i.e. TensorFlow Datasets).  It also contains utility methods to cache, augment, and up-sample the datasets.
+>` pre-processing.py`: This file contains the code to download the adjusted dataset from Google Drive and make it available to the machine learning algorithms in standard formats (i.e., TensorFlow Datasets).  It also contains utility methods to cache, augment, and up-sample the datasets.
 
 `/model/`
 > `util.py`: This file has the functions required to create the convolutional neural network (ConvNet) models, along with the utility code to run and store details of the tasks.  Also included here are some ancilliary functions to produce confusion matrices and learning rate curve graphs.
@@ -20,7 +20,7 @@ This repository contains all the code required to download & pre-process the dat
 > This directory hosts the results.  There are subdirectories for the confusion matrices and learning rate curves.  The parent directory contains the full training history (`training_details.csv`), test scores (`experimental_results.csv`), the confusion matrix for the final emsemble model (`conf_mat_N.png`), and a learning rate curve comparison between the two best-of-breed models `learning_curves_best_of_breeds (bef fine-tuning).png`.
 
 `/workings/`
-> `assignment-workings.ipynb`: As noted in the 'Development Approach' section of the report, the author used this notebook to develop the solutions on Kaggle before carving the code into the module structure described here.  The revision history evidences how the solution was built-up and has all the final test results recorded in the output.  It could be run in lieu of using `main.py` - the code is all equivalent.
+> `assignment-workings.ipynb`: As noted in the 'Development Approach' section of the report, the author used this notebook to develop the solutions on Kaggle before carving the code into the module structure described here.  The revision history evidences how the solution was built-up and has all the final results, as included in the report, recorded in the output.  It could be run in lieu of using `main.py` - the code is all equivalent.
 
 `README.md`: this file.
 
@@ -62,8 +62,6 @@ An alternative would be to run the `/workings/assignment-workings.ipynb` on eith
 
 ## Ideas for Improving the Codebase
 
-1. Add support for saving the state of the various model, so that re-running the analysis would be quicker.
+1. Add support for saving the state of the various models, so that re-running the analysis would be quicker.
 2. Craft the utility methods into more classes/objects (e.g., perhaps a Task class would be elegant/useful).
 3. Use tuning utilities, such as KerasTuner perhaps, to help automate some of the hyperparameter search.
-
-
