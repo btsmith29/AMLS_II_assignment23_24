@@ -24,7 +24,7 @@ This repository contains all the code required to download & pre-process the dat
 
 `README.md`: this file.
 
-`interactive_runner.ipynb`: This interactive notebook is designed to make it easy to run the project.  Once opened in Colab, it will download the code from the respository and run the main function (see below).  The author committed this with the output of a more lightweight run of tasks using image_size=225 and epochs=10.
+`interactive_runner.ipynb`: This interactive notebook is designed to make it easy to run the project.  Once opened in Colab, it will download the code from the respository and run the main function (see below).  The author committed this with the output of a more lightweight run of tasks using image_size=225 and epochs=4.
 
 `main.py`: This orchestrates the data pre-processing and the various learning tasks. It takes four arguments (also documented in the script):
   * `tasks`: a list of tasks to run, e.g. "ACEFGHI" (or "all", or "none")
