@@ -188,9 +188,9 @@ def create_simple_model(params: Params) -> Model:
 
         # Classifier Head
         layers.Flatten(),
-        layers.Dense(512, activation='relu'),
+        layers.Dense(1024, activation='relu'),
         layers.Dropout(0.5),
-        layers.Dense(512, activation='relu'),
+        layers.Dense(1024, activation='relu'),
         layers.Dropout(0.5),
         layers.Dense(units=5, activation="softmax"),
     ])
