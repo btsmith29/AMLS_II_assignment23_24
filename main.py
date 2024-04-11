@@ -217,7 +217,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     convnext_base.model.trainable = False
     model_n = create_model_ensemble_avg(params, inputs, [model_m, convnext_base])
     model_n.model.trainable = False
-    run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
+    run_task(f"N", model_n, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
 
   # plot two best-of-breed models (before fine-runing, as that only runs for one epoch)
   plot_task_comp(collector, ["D_init", "M_init"])
