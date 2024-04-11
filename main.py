@@ -218,33 +218,39 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model_n.model.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, params, collector, class_weights)
 
+  # plot two best-of-breed models (before fine-runing, as that only runs for one epoch)
+  plot_task_comp(collector, ["D_init", "M_init"])
+
   print("\n=======================")
   print("= All Tasks Completed =")
   print("=======================")
 
 
 def _run_task(selector: str, task: str):
-    if (selector is None or selector == "none"):
-        return False
-    else:
-        return (selector == "all") or (task in selector)
+  """
+  Small util to decide whether a given task should be run, based on the input parameters.
+  """
+  if (selector is None or selector == "none"):
+      return False
+  else:
+      return (selector == "all") or (task in selector)
 
 
 def _handle_docopt_arguments(args):
-    """
-    Remove double dash from docopt arguments, replace the single dash with underscore and remove --help
-
-    Args:
-        args (dict): dictionary of docopt arguments (ex: {'--ftp': True, '--upload': True, '--delete': False})
-
-     Return:
-         dictionary of docopt arguments
-    """
-    return {
-        key.replace("--", "").replace("-", "_"): val
-        for key, val in args.items()
-        if key != "--help"
-    }
+  """
+  Remove double dash from docopt arguments, replace the single dash with underscore and remove --help
+  
+  Args:
+      args (dict): dictionary of docopt arguments (ex: {'--ftp': True, '--upload': True, '--delete': False})
+  
+   Return:
+       dictionary of docopt arguments
+  """
+  return {
+      key.replace("--", "").replace("-", "_"): val
+      for key, val in args.items()
+      if key != "--help"
+  }
 
 
 if __name__ == "__main__":
