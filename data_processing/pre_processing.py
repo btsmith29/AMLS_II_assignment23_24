@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Functions for pre-processing the data and operating on Datasets.
+"""
 import gdown
 import keras
 import pandas as pd
