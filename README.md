@@ -60,7 +60,7 @@ As noted above, the easiest way to run the code is to open `interactive_runner.i
 
 An alternative would be to run the `/workings/assignment-workings.ipynb` on either Colab or Kaggle.
 
-### Ideas for Improving the Codebase
+## Ideas for Improving the Codebase
 
 1. Add support for saving the state of the various model, so that re-running the analysis would be quicker.
 2. Craft the utility methods into more classes/objects (e.g., perhaps a Task class would be elegant/useful).
