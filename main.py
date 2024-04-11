@@ -179,7 +179,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
     del model
 
-  if len(collector.get_train_details()) > 0:
+  if not collector.get_train_details().empty:
     # plot ablations (E is equivalent to D_init)
     plot_task_comp(collector, ["E", "F", "G", "H", "I", "J", "K"])
 
@@ -220,7 +220,7 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model_n.model.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
 
-  if len(collector.get_train_details()) > 0:
+  if not collector.get_train_details().empty:
     # plot two best-of-breed models (before fine-runing, as that only runs for one epoch)
     plot_task_comp(collector, ["D_init", "M_init"])
 
