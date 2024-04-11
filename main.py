@@ -228,6 +228,13 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
   print("= All Tasks Completed =")
   print("=======================")
 
+  if not collector.get_test_scores().empty:
+    print("\n===========")
+    print("= Results =")
+    print("===========")
+
+    print(collector.get_test_scores())    
+
 
 def _run_task(selector: str, task: str):
   """
