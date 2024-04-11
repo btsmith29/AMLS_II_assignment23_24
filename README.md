@@ -58,4 +58,6 @@ It is not possible to run the project without access to a GPU.  Kaggle offers 30
 
 As noted above, the easiest way to run the code is to open `interactive_runner.ipynb` on Colab and run all the cells.
 
+An alternative would be to run the `/workings/assignment-workings.ipynb` on either Colab or Kaggle.
+
 
