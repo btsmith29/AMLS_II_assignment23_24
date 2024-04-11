@@ -17,20 +17,20 @@ This repository contains all the code required to download & pre-process the dat
 > `util.py`: This file has the functions required to create the convolutional neural network (ConvNet) models, along with the utility code to run and store details of the tasks.  Also included here are some ancilliary functions to produce confusion matrices and learning rate curve graphs.
 
 `/results/`:
-> This directory hosts the results.  There are subdirectories for the confusion matrices and learning rate curves.  The parent directory contains the full training history (`train_details.csv`), test scores (`experimental_results.csv`), the confusion matrix for the final emsemble model (`conf_mat_N.png`), and a learning rate curve comparison between the two best-of-breed models `learning_curves_best_of_breeds (bef fine-tuning).png`.
+> This directory hosts the results.  There are subdirectories for the confusion matrices and learning rate curves.  The parent directory contains the full training history (`training_details.csv`), test scores (`experimental_results.csv`), the confusion matrix for the final emsemble model (`conf_mat_N.png`), and a learning rate curve comparison between the two best-of-breed models `learning_curves_best_of_breeds (bef fine-tuning).png`.
 
 `/workings/`
-> `assignment-workings.ipynb`: As noted in the 'Development Approach' section of the report, the author used this notebook to develop the solutions on Kaggle before carving the code into the module structure described here.  It isn't meant to be part of the assignment submission, per se, but the revision history evidences how the solution was built-up and has all the final test results recorded in the output.  It could be run in lieu of using `main.py` - the code is all equivalent.
+> `assignment-workings.ipynb`: As noted in the 'Development Approach' section of the report, the author used this notebook to develop the solutions on Kaggle before carving the code into the module structure described here.  The revision history evidences how the solution was built-up and has all the final test results recorded in the output.  It could be run in lieu of using `main.py` - the code is all equivalent.
 
 `README.md`: this file.
 
-`interactive_runner.ipynb`: The interactive notebook is designed to make it easy to run the project.  Once opened in Colab, it will download the code from the respository and run the main function (see below).  The author checked this in with the output of a more lightweight run of image_size=225 and epochs=10.
+`interactive_runner.ipynb`: This interactive notebook is designed to make it easy to run the project.  Once opened in Colab, it will download the code from the respository and run the main function (see below).  The author committed this with the output of a more lightweight run of tasks using image_size=225 and epochs=10.
 
-`main.py`: This orchestrates the data pre-processing and the various learning tasks. It takes three arguments (also documented in the script):
+`main.py`: This orchestrates the data pre-processing and the various learning tasks. It takes four arguments (also documented in the script):
   * `tasks`: a list of tasks to run, e.g. "ACEFGHI" (or "all", or "none")
   * `image_size`: Image size on which to train the models (e.g. 255; useful to lower in lower memory environments)
   * `epochs`: the number of epochs for which to run each task (e.g. 75; useful to lower in lower memory environments)
-  * `force:`: whether to force the data download and pre-processing steps to be repeated
+  * `force:`: whether to force the data download and pre-processing steps to be repeated again, even if the data is available locally.
 
 ## Requirements
 
