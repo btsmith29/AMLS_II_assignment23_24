@@ -179,8 +179,9 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     run_task(f"K", model, ds_train_cached, ds_valid, ds_test, params, collector)
     del model
 
-  # plot ablations (E is equivalent to D_init)
-  plot_task_comp(collector, ["E", "F", "G", "H", "I", "J", "K"])
+  if len(collector.get_train_details()) > 0:
+    # plot ablations (E is equivalent to D_init)
+    plot_task_comp(collector, ["E", "F", "G", "H", "I", "J", "K"])
 
   if _run_task(tasks, "L"):
     print("\n==== Task L: Create a Custom Convnet ====")
@@ -219,8 +220,9 @@ def main(tasks:str="A", image_size:int=255, epochs:int=75, force_download=False)
     model_n.model.trainable = False
     run_task(f"N", model_n, ds_train, ds_valid, ds_test, ft_params, collector, class_weights)
 
-  # plot two best-of-breed models (before fine-runing, as that only runs for one epoch)
-  plot_task_comp(collector, ["D_init", "M_init"])
+  if len(collector.get_train_details()) > 0:
+    # plot two best-of-breed models (before fine-runing, as that only runs for one epoch)
+    plot_task_comp(collector, ["D_init", "M_init"])
 
   print("\n=======================")
   print("= All Tasks Completed =")
