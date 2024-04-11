@@ -36,6 +36,7 @@ try:
       create_model, 
       create_model_ensemble_avg, 
       create_simple_model,
+      plot_task_comp,
       plot_task_comp_by_prefix,
       run_task,
     )
