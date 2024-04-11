@@ -1,3 +1,3 @@
 ### Workings
 
-Jupyter Notebooks included here to show workings (but not required to run the analysis).
+Jupyter Notebooks included here to show workings - can be run in lieu of main.py if easier.
